@@ -1,0 +1,522 @@
+---
+title: "Script for all calculations - SDG Interactions Nepal"
+author: "Biraj Adhikari"
+date: "2023-04-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r requirements}
+library(readxl)
+library(dplyr)
+library(ggrepel) #for geom_text_repel
+library(ggplot2)
+library(ggpubr)
+library(tidyr)
+fct_case_when <- function(...) {
+  args <- as.list(match.call())
+  levels <- sapply(args[-1], function(f) f[[3]])  # extract RHS of formula
+  levels <- levels[!is.na(levels)]
+  factor(dplyr::case_when(...), levels=levels)
+}
+```
+
+# Method 1: Seven-Point Likert Scale:  
+## Fig. 2
+```{r reading and formatting data: method 1}
+maindat = read_xlsx('Alldata.xlsx', sheet = "method1")
+
+#Assigning appropriate labels:
+maindat = maindat %>%
+  
+    mutate(sdgout_def = fct_case_when(
+    sdgout == "sdg17.14" ~ "SDG 17.14: Policy Coherence",
+    sdgout == "sdg16.5" ~ "SDG 16.5: Reduced Corruption",
+    sdgout == "sdg16.3" ~ "SDG 16.3: Rule of Law",
+    sdgout == "sdg13.3" ~ "SDG 13.3: Climate Change Capacity",
+    sdgout == "sdg13.2" ~ "SDG 13.2: Climate Change Measures",
+    sdgout == "sdg13.1" ~ "SDG 13.1: Climate Change Resilience",
+    sdgout == "sdg12.2" ~ "SDG 12.2: Natural Resource Management",
+    sdgout == "sdg11.4" ~ "SDG 11.4: Heritage",
+    sdgout == "sdg11.3" ~ "SDG 11.3: Urbanization",
+    sdgout == "sdg10.2" ~ "SDG 10.2: Inclusivity",
+    sdgout == "sdg10.1" ~ "SDG 10.1: Reduced Inequalities",
+    sdgout == "sdg9.2" ~ "SDG 9.2: Industrialization",
+    sdgout == "sdg9.1" ~ "SDG 9.1: Infrastructure",
+    sdgout == "sdg8.9" ~ "SDG 8.9: Sustainable Tourism",
+    sdgout == "sdg8.1" ~ "SDG 8.1: Economic Growth",
+    sdgout == "sdg7.2" ~ "SDG 7.2: Renewable Energy",
+    sdgout == "sdg7.1" ~ "SDG 7.1: Universal Energy Access",
+    sdgout == "sdg6.3" ~ "SDG 6.3: Water Quality",
+    sdgout == "sdg6.1" ~ "SDG 6.1: Water Access",
+    sdgout == "sdg5.5" ~ "SDG 5.5: Gender Inclusivity",
+    sdgout == "sdg5.1" ~ "SDG 5.1: No Gender Discrimination",
+    sdgout == "sdg4.7" ~ "SDG 4.7: Sustainability Education",
+    sdgout == "sdg4.3" ~ "SDG 4.3: Education Access",
+    sdgout == "sdg3.8" ~ "SDG 3.8: Universal Health Access",
+    sdgout == "sdg3.4" ~ "SDG 3.4: Reduced Mortality",
+    sdgout == "sdg2.4" ~ "SDG 2.4: Food Sustainability",
+    sdgout == "sdg2.3" ~ "SDG 2.3: Food Productivity",
+    sdgout == "sdg2.1" ~ "SDG 2.1: Universal Food Access",
+    sdgout == "sdg1.3" ~ "SDG 1.3: Social Protection",
+    sdgout == "sdg1.2" ~ "SDG 1.2: Poverty Reduction"
+  )) %>%
+  
+  mutate(sdgout = fct_case_when(
+    sdgout == "sdg17.14" ~ "SDG 17.14",
+    sdgout == "sdg16.5" ~ "SDG 16.5",
+    sdgout == "sdg16.3" ~ "SDG 16.3",
+    sdgout == "sdg13.3" ~ "SDG 13.3",
+    sdgout == "sdg13.2" ~ "SDG 13.2",
+    sdgout == "sdg13.1" ~ "SDG 31.1",
+    sdgout == "sdg12.2" ~ "SDG 12.2",
+    sdgout == "sdg11.4" ~ "SDG 11.4",
+    sdgout == "sdg11.3" ~ "SDG 11.3",
+    sdgout == "sdg10.2" ~ "SDG 10.2",
+    sdgout == "sdg10.1" ~ "SDG 10.1",
+    sdgout == "sdg9.2" ~ "SDG 9.2",
+    sdgout == "sdg9.1" ~ "SDG 9.1",
+    sdgout == "sdg8.9" ~ "SDG 8.9",
+    sdgout == "sdg8.1" ~ "SDG 8.1",
+    sdgout == "sdg7.2" ~ "SDG 7.2",
+    sdgout == "sdg7.1" ~ "SDG 7.1",
+    sdgout == "sdg6.3" ~ "SDG 6.3",
+    sdgout == "sdg6.1" ~ "SDG 6.1",
+    sdgout == "sdg5.5" ~ "SDG 5.5",
+    sdgout == "sdg5.1" ~ "SDG 5.1",
+    sdgout == "sdg4.7" ~ "SDG 4.7",
+    sdgout == "sdg4.3" ~ "SDG 4.3",
+    sdgout == "sdg3.8" ~ "SDG 3.8",
+    sdgout == "sdg3.4" ~ "SDG 3.4",
+    sdgout == "sdg2.4" ~ "SDG 2.4",
+    sdgout == "sdg2.3" ~ "SDG 2.3",
+    sdgout == "sdg2.1" ~ "SDG 2.1",
+    sdgout == "sdg1.3" ~ "SDG 1.3",
+    sdgout == "sdg1.2" ~ "SDG 1.2"
+  )) %>%
+  
+    mutate(sdgin = fct_case_when(
+    sdgin == "sdg17.14" ~ "SDG 17.14",
+    sdgin == "sdg16.5" ~ "SDG 16.5",
+    sdgin == "sdg16.3" ~ "SDG 16.3",
+    sdgin == "sdg13.3" ~ "SDG 13.3",
+    sdgin == "sdg13.2" ~ "SDG 13.2",
+    sdgin == "sdg13.1" ~ "SDG 31.1",
+    sdgin == "sdg12.2" ~ "SDG 12.2",
+    sdgin == "sdg11.4" ~ "SDG 11.4",
+    sdgin == "sdg11.3" ~ "SDG 11.3",
+    sdgin == "sdg10.2" ~ "SDG 10.2",
+    sdgin == "sdg10.1" ~ "SDG 10.1",
+    sdgin == "sdg9.2" ~ "SDG 9.2",
+    sdgin == "sdg9.1" ~ "SDG 9.1",
+    sdgin == "sdg8.9" ~ "SDG 8.9",
+    sdgin == "sdg8.1" ~ "SDG 8.1",
+    sdgin == "sdg7.2" ~ "SDG 7.2",
+    sdgin == "sdg7.1" ~ "SDG 7.1",
+    sdgin == "sdg6.3" ~ "SDG 6.3",
+    sdgin == "sdg6.1" ~ "SDG 6.1",
+    sdgin == "sdg5.5" ~ "SDG 5.5",
+    sdgin == "sdg5.1" ~ "SDG 5.1",
+    sdgin == "sdg4.7" ~ "SDG 4.7",
+    sdgin == "sdg4.3" ~ "SDG 4.3",
+    sdgin == "sdg3.8" ~ "SDG 3.8",
+    sdgin == "sdg3.4" ~ "SDG 3.4",
+    sdgin == "sdg2.4" ~ "SDG 2.4",
+    sdgin == "sdg2.3" ~ "SDG 2.3",
+    sdgin == "sdg2.1" ~ "SDG 2.1",
+    sdgin == "sdg1.3" ~ "SDG 1.3",
+    sdgin == "sdg1.2" ~ "SDG 1.2"
+  ))
+```
+
+### Outgoing Interactions
+```{r preparing plot}
+#making outscore a categorical variable for visualization purposes
+outsc_cat = maindat
+outsc_cat$outscore = factor(outsc_cat$outscore, levels = c("-3", "-2", "-1", "0", "1", "2", "3"))
+
+#calculating the frequency of various outscores per sdg and calculating percentage of each outscore per sdg
+for_outsc_vis = outsc_cat %>% group_by(sdgout_def, outscore) %>% dplyr::summarise(n = n())
+for_outsc_vis = for_outsc_vis %>% group_by(sdgout_def) %>% mutate(pc = round(n/sum(n),2))
+
+#to make divergent stacked bar plot
+for_outsc_vis = for_outsc_vis %>% mutate(pc = if_else(outscore == "0", pc/2, pc))
+
+#to add labels left and right of the fig
+poslabel = for_outsc_vis %>% filter(outscore %in% c("1", "2", "3")) %>% group_by(sdgout_def) %>% dplyr::summarize(poslab = sum(pc))
+neglabel = for_outsc_vis %>% filter(outscore %in% c("-1", "-2", "-3")) %>% group_by(sdgout_def) %>% dplyr::summarize(neglab = sum(pc))
+
+#making the ggplot
+outscore_fig = ggplot() +
+
+  #making the positive values first
+  geom_col(data = filter(for_outsc_vis, outscore %in% c("0", "1", "2", "3")), 
+           aes(x = sdgout_def, y = pc, fill = outscore),
+           position = position_stack(reverse = T)) +
+  
+#these are the negative values
+  geom_col(data = filter(for_outsc_vis, outscore %in% c("0", "-1", "-2", "-3")),
+           aes(x = sdgout_def, y = -pc, fill = outscore), position = position_stack()) +
+  
+#adding neutral value percentage labels (in the middle)  
+  geom_text(data = filter(for_outsc_vis, outscore == "0"), aes(x = sdgout_def, y = 0, label = paste(pc*2*100, "%")), size = 4) +
+  
+#adding positive labels (in the right)
+  geom_text(data = poslabel, aes(x = sdgout_def, y = 1.15, label = paste(poslab*100,"%")), size =4, color = "#1572d1") + 
+  
+#adding negative labels (in the left)
+  geom_text(data = neglabel, aes(x = sdgout_def, y = -0.65, label = paste(neglab*100, "%")), size =4, color = "#e6470e") + 
+  
+  scale_fill_brewer(palette = "RdBu", drop = FALSE,
+                    labels = c("(-3) Canceling", "(-2) Counteracting",  "(-1) Constraining", "(0) Consistent", "(+1) Enabling", "(+2) Reinforcing", "(+3) Indivisible")) +
+  
+  theme_minimal() +
+  labs(title = "(a) Outgoing Interactions towards SDG 15")+
+  xlab("SDG Targets") +
+     
+    theme(
+        plot.title = element_text(hjust = 0.5, size = 15),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 15),
+        axis.text.x = element_blank(),
+        axis.title.y = element_text(size = 15),
+        axis.title.x = element_blank(),
+        axis.text.y = element_text(size = 12)
+        ) +
+
+  coord_flip()
+
+outscore_fig
+
+rm(list = c('poslabel','neglabel','outsc_cat'))
+
+```
+
+### Incoming Interactions
+```{r}
+#making inscore a categorical variable for visualization purposes
+insc_cat = maindat
+insc_cat$inscore = factor(insc_cat$inscore, levels = c("-3", "-2", "-1", "0", "1", "2", "3"))
+
+#calculating the frequency of various inscores per sdg and calculating percentage of each inscore per sdg
+for_insc_vis = insc_cat %>% group_by(sdgin, inscore) %>% summarise(n = n())
+for_insc_vis = for_insc_vis %>% group_by(sdgin) %>% mutate(pc = round(n/sum(n),2))
+
+#to make divergent stacked bar plot
+for_insc_vis %>% mutate(pc = if_else(inscore == "0", pc/2, pc))
+
+#to add labels left and right of the fig
+poslabel = for_insc_vis %>% filter(inscore %in% c("1", "2", "3")) %>% group_by(sdgin) %>% summarize(poslab = sum(pc))
+neglabel = for_insc_vis %>% filter(inscore %in% c("-1", "-2", "-3")) %>% group_by(sdgin) %>% summarize(neglab = sum(pc))
+
+#making the ggplot
+inscore_fig = ggplot() +
+
+  #making the positive values first
+  geom_col(data = filter(for_insc_vis, inscore %in% c("0", "1", "2", "3")), 
+           aes(x = sdgin, y = pc, fill = inscore),
+           position = position_stack(reverse = T)) +
+  
+#these are the negative values
+  geom_col(data = filter(for_insc_vis, inscore %in% c("0", "-1", "-2", "-3")),
+           aes(x = sdgin, y = -pc, fill = inscore), position = position_stack()) +
+  
+#adding neutral value percentage labels (in the middle)  
+  geom_text(data = filter(for_insc_vis, inscore == "0"), aes(x = sdgin, y = 0, label = paste(pc*2*100, "%")), size = 4) +
+  
+#adding positive labels (in the right)
+  geom_text(data = poslabel, aes(x = sdgin, y = 1.15, label = paste(poslab*100,"%")), size =4, color = "#1572d1") + 
+  
+#adding negative labels (in the left)
+  geom_text(data = neglabel, aes(x = sdgin, y = -0.65, label = paste(neglab*100, "%")), size =4, color = "#e6470e") + 
+
+scale_fill_brewer(palette = "RdBu", drop = FALSE,
+     labels = c("(-3) Canceling", "(-2) Counteracting",  "(-1) Constraining", "(0)     Consistent", "(+1)       Enabling", "(+2) Reinforcing", "(+3) Indivisible")) +
+  
+scale_x_discrete(position = "top") + 
+  
+  theme_minimal() +
+ labs(title = "(b) Incoming Interactions from SDG 15", x = "") + 
+  theme(
+      plot.title = element_text(hjust = 0.5, size = 15),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 15),
+      axis.text.x = element_blank(),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 12)
+        ) +
+
+  coord_flip()
+
+inscore_fig
+```
+
+### Combining Outgoing and Incoming Interactions
+```{r}
+png(filename = "Figure2.png",            
+  width = 3800,        
+  height = 3000,
+  res = 300,  
+  ) 
+
+ggarrange(outscore_fig, NULL, inscore_fig + rremove("y.text"), widths = c(1.7,0.1, 1), nrow = 1, ncol = 3, common.legend = TRUE, legend = "bottom")
+
+rm(for_insc_vis, for_outsc_vis, insc_cat, inscore_fig, 
+            maindat, neglabel, outscore_fig, poslabel)
+```
+
+## Figure 3
+```{r reading data - fig 3}
+maindat = read_xlsx('Alldata.xlsx', sheet = "method1")
+maindat = maindat %>% select(-sdgin) %>% rename(SDGs = sdgout)
+
+maindat$SDGs = factor(maindat$SDGs, levels = c("sdg1.2", "sdg1.3", "sdg2.1", "sdg2.3", "sdg2.4", "sdg3.4", "sdg3.8", "sdg4.3", "sdg4.7", "sdg5.1", "sdg5.5", "sdg6.1", "sdg6.3", "sdg7.1", "sdg7.2", "sdg8.1", "sdg8.9", "sdg9.1", "sdg9.2", "sdg10.1", "sdg10.2", "sdg11.3", "sdg11.4", "sdg12.2", "sdg13.1", "sdg13.2", "sdg13.3", "sdg16.3", "sdg16.5", "sdg17.14"))
+```
+
+### Fig 3a (AR and IC for other goals)
+```{r required calculations}
+#STEP 1: for each SDGt target, we first calculate the median positive outgoing, median negative outgoing, median positive incoming and median negative incoming interactions::
+#in cases where the median confidence of each score is >3 (ie uncertain), we have excluded it from our analysis
+
+pos_out = maindat %>% filter(outscore>0) %>%
+  group_by(SDGs) %>%
+  summarize (
+             med_pos_outscore = median(outscore),
+             pos_outscore_med_conf = median(conf_out)
+             ) %>%
+  filter(pos_outscore_med_conf < 3)
+             
+neg_out = maindat %>% filter(outscore <0) %>%
+group_by(SDGs) %>%
+  summarize(
+            med_neg_outscore = median(outscore),
+            neg_outscore_med_conf = median(conf_out)
+             ) %>%
+  filter(neg_outscore_med_conf < 3)
+
+pos_in = maindat %>% filter(inscore > 0) %>%
+  group_by(SDGs) %>%
+  summarize(
+            med_pos_inscore = median(inscore),
+            pos_inscore_med_conf = median(conf_in)
+            ) %>%
+  filter(pos_inscore_med_conf < 3)
+
+neg_in = maindat %>% filter(inscore < 0) %>%
+  group_by(SDGs) %>%
+  summarize(
+            med_neg_inscore = median(inscore),
+            neg_inscore_med_conf = median(conf_in)
+            ) %>%
+  filter(neg_inscore_med_conf < 3)
+
+
+#merging all of the calculated values above
+sdgstat_all = merge(pos_out, neg_out, by = "SDGs", all = TRUE)
+sdgstat_all = merge(sdgstat_all, pos_in, by = "SDGs", all =  TRUE)
+sdgstat_all = merge(sdgstat_all, neg_in, by = "SDGs", all =  TRUE)
+
+
+
+sdgstat_all = sdgstat_all %>% separate(SDGs, c("Goal", "Target"))
+
+#STEP 2: Calculating Weigted Interaction scores for goal level. Note: the division by n() is so that the scores are not affected by the number of targets taken for each SDG (For example, SDG 12 has only one target and SDG 13 has 3 targets.)
+sdgstat_all = sdgstat_all %>% group_by(Goal) %>% summarize(Weighted.Outscore.Pos = sum(med_pos_outscore, na.rm = TRUE)/n(),
+                                                           Weighted.Outscore.Neg = sum(med_neg_outscore, na.rm = TRUE)/n(),
+                                                           Weighted.Inscore.Pos = sum(med_pos_inscore, na.rm = TRUE)/n(),
+                                                           Weighted.Inscore.Neg = sum(med_neg_inscore, na.rm = TRUE)/n())
+
+sdgstat_all = sdgstat_all %>%
+  mutate(Goal = fct_case_when(
+     Goal == "sdg1" ~ "SDG 1",
+     Goal == "sdg2" ~ "SDG 2",
+     Goal == "sdg3" ~ "SDG 3",
+     Goal == "sdg4" ~ "SDG 4",
+     Goal == "sdg5" ~ "SDG 5",
+     Goal == "sdg6" ~ "SDG 6",
+     Goal == "sdg7" ~ "SDG 7",
+     Goal == "sdg8" ~ "SDG 8",
+     Goal == "sdg9" ~ "SDG 9",
+     Goal == "sdg10" ~ "SDG 10",
+     Goal == "sdg11" ~ "SDG 11",
+     Goal == "sdg12" ~ "SDG 12",
+     Goal == "sdg13" ~ "SDG 13",
+     Goal == "sdg16" ~ "SDG 16",
+     Goal == "sdg17" ~ "SDG 17"
+  ))
+
+
+
+#calculating ARs and ICs
+sdgstat_all = sdgstat_all %>%
+  mutate(AR_pos = Weighted.Outscore.Pos/Weighted.Inscore.Pos) %>%
+  mutate(AR_neg = Weighted.Outscore.Neg/Weighted.Inscore.Neg) %>%
+  mutate(IC_pos = Weighted.Outscore.Pos * Weighted.Inscore.Pos) %>%
+  mutate(IC_neg = Weighted.Outscore.Neg * Weighted.Inscore.Neg)
+
+rm(neg_in, neg_out, pos_in, pos_out)
+```
+  
+Final Adjustments
+```{r final adjustments - fig 3}
+#removing NAs and Infs
+df_posAR = sdgstat_all %>% select(Goal, AR_pos) %>% filter(!is.na(AR_pos)) %>% filter(!is.infinite(AR_pos)) %>% filter(AR_pos !=0)
+df_negAR = sdgstat_all %>% select(Goal, AR_neg) %>% filter(!is.na(AR_neg)) %>% filter(!is.infinite(AR_neg)) %>% filter(AR_neg !=0)
+df_posIC = sdgstat_all %>% select(Goal, IC_pos) %>% filter(!is.na(IC_pos)) %>% filter(!is.infinite(IC_pos)) %>% filter(IC_pos !=0)
+df_negIC = sdgstat_all %>% select(Goal, IC_neg) %>% filter(!is.na(IC_neg)) %>% filter(!is.infinite(IC_neg)) %>% filter (IC_neg !=0)
+
+forplot = merge(df_posAR, df_negAR, by = "Goal", all = TRUE)
+forplot = merge(forplot, df_posIC, by = "Goal", all = TRUE)
+forplot = merge(forplot, df_negIC, by = "Goal", all = TRUE)
+colnames(forplot) = c("SDG", "AR_pos", "AR_neg", "IC_pos", "IC_neg")
+
+rm(df_posAR, df_negAR, df_posIC, df_negIC)
+```
+  
+  Making the figure:
+
+```{r AR IC - Fig 3a}
+#now we have all we need to plot
+#plotting the data
+png(filename = "Figure3a.png",
+    width = 2000,
+    height = 1500,
+    res = 300)
+
+bm_all = ggplot() +
+
+  #positive AR/IC
+    geom_point(data = forplot, aes(x = AR_pos, y = IC_pos), color = "#4393c3", shape = 16, size = 2.5) +
+    geom_text_repel(data = forplot, aes(x = AR_pos, y = IC_pos, label = SDG),
+            color = "#4393c3", size = 2.4, min.segment.length = Inf, box.padding = 0.1) +
+  #negative AR/IC  
+  geom_point(data = forplot, aes(x = AR_neg, y = IC_neg), color = "#d6604d", shape = 17, size = 2.5) +
+  geom_text_repel(data = forplot, aes(x = AR_neg, y = IC_neg, label = SDG),
+            color = "#d6604d", size = 2.4) +
+  
+  geom_vline(xintercept = 1) +
+  scale_x_continuous(trans = "log10",
+                     breaks = c(0.5, 0.8, 1, 2, 3)) +
+  
+  #plotting for SDG 15 AR and IC
+ #geom_point(data = for_plot, aes(x = ar, y = ic/350), 
+  #          size = 3, shape = 17, color = c("#4393c3", "#d6604d")) + 
+ #geom_text_repel(data = for_plot, aes(x = ar, y = ic/350), label = c(rep("SDG 15", 2)), 
+  #                color = c("#4393c3", "#d6604d"), size = 2
+   #               ) +
+  
+#  scale_x_continuous(limits = c(0,2)) +
+  
+#  scale_y_continuous(sec.axis = sec_axis(trans = ~.*350, name = "Interconnectedness (SDG 15)")) +
+  
+  #Labels for axis and sections (buffers/multipliers)
+  labs(x = "Activity Ratio", y = "Interconnectedness") + 
+  annotate(geom = "text", x = 0.75, y = 3, label = "Buffers", 
+           fontface = 'italic', size = 3.5) +
+  annotate(geom = "text", x = 1.7, y = 3, label = "Multipliers", 
+           fontface = 'italic', size = 3.5) +
+  
+  #some more explanation of labels
+
+  annotate(geom = "text", x = 1, y = -1, label = "(Weak Influence)", 
+           fontface = 'italic', size = 3) +
+
+  annotate(geom = "text", x = 1, y = 8.8, label = "(Strong Influence)", 
+           fontface = 'italic', size = 3) +
+  
+  coord_cartesian(ylim = c(0, 8), clip = "off") +
+  labs(title = "(a)") +
+  
+  theme(axis.title = element_text(size = 10),
+        axis.text = element_text(size = 7),
+        panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_line(size = 0.45, linetype = "solid", colour = "#F0F0F0"),
+        panel.grid.minor = element_line(size = 0.45, linetype = "solid", colour = "#F0F0F0"),
+        plot.margin = unit(c(0.8,0,0.8,0), "cm"))
+  
+
+bm_all
+dev.off()
+```
+  
+### Fig 3b (AR and IC for SDG 15)
+```{r}
+pos_out = maindat %>% filter(inscore >0) %>% group_by(SDGs) %>% summarize(median_inscore_pos = median(inscore))
+neg_out = maindat %>% filter(inscore <0) %>% group_by(SDGs) %>% summarize(median_inscore_neg = median(inscore))
+
+outdegree_pos = sum(pos_out$median_inscore_pos)
+outdegree_neg = sum(neg_out$median_inscore_neg)
+
+pos_in = maindat %>% filter(outscore >0) %>% group_by(SDGs) %>% summarize(median_outscore_pos = median(outscore))
+neg_in = maindat %>% filter(outscore <0) %>% group_by(SDGs) %>% summarize(median_outscore_neg = median(outscore))
+
+indegree_pos = sum(pos_in$median_outscore_pos)
+indegree_neg = sum(neg_in$median_outscore_neg)
+
+weighted_outdegree = outdegree_pos - outdegree_neg
+weighted_indegree = indegree_pos - indegree_neg
+
+ar_pos = outdegree_pos/indegree_pos
+ar_neg = outdegree_neg/indegree_neg
+
+ic_pos = outdegree_pos * indegree_pos
+ic_neg = outdegree_neg * indegree_neg
+
+rm(pos_out, neg_out, outdegree_pos, outdegree_neg, pos_in, neg_in,
+   indegree_pos, indegree_neg, weighted_outdegree, weighted_indegree)
+
+forplot_SDG15 = data.frame(SDG = "SDG 15",
+                           AR_pos = ar_pos, AR_neg = ar_neg,
+                           IC_pos = ic_pos, IC_neg = ic_neg)
+```
+
+```{r making plot (AR IC SDG 15) Fig 3b}
+onlySDG15 = ggplot() +
+  #positive AR/IC
+  geom_point(data = forplot_SDG15, aes(x = AR_pos, y = IC_pos), color = "#4393c3", shape = 16, size = 2.5) +
+  geom_text_repel(data = forplot_SDG15, aes(x = AR_pos, y = IC_pos, label = SDG),
+            color = "#4393c3", size = 2.4) +
+  
+  #negative AR/IC
+  geom_point(data = forplot_SDG15, aes(x = AR_neg, y = IC_neg), color = "#d6604d", shape = 17, size = 2.5) +
+  geom_text_repel(data = forplot_SDG15, aes(x = AR_neg, y = IC_neg, label = SDG),
+            color = "#d6604d", size = 2.4) +
+  
+  geom_vline(xintercept = 1) +
+  scale_x_continuous(limits = c(0.5, 1.7), trans = "log10",
+                     ) + labs(x = "Activity Ratio", y = "Interconnectedness") + 
+  annotate(geom = "text", x = 0.75, y = 1500, label = "Buffer", 
+           fontface = 'italic', size = 3.5) +
+  annotate(geom = "text", x = 1.5, y = 1500, label = "Multiplier", 
+           fontface = 'italic', size = 3.5) +
+  
+  coord_cartesian(ylim = c(0, 3200), clip = "off") +
+  
+  labs(title = "(b)") +
+  
+  theme(axis.title = element_text(size = 10),
+        axis.text = element_text(size = 7),
+        panel.background = element_rect(fill = "#d8d8d8"),
+        panel.grid.major = element_line(size = 0.45, linetype = "solid", colour = "#F0F0F0"),
+        panel.grid.minor = element_line(size = 0.45, linetype = "solid", colour = "#F0F0F0"),
+        plot.margin = unit(c(0.8,0,0.8,0), "cm"))
+  
+
+onlySDG15
+
+#exporting this
+png(filename = "OnlySDG15_v2.png",
+    width = 1000,
+    height = 750,
+    res = 300)
+onlySDG15
+dev.off()
+
+#note: We manually combine Fig 3a and 3b outside of R.
+```
+
+# Fig. 4
+
