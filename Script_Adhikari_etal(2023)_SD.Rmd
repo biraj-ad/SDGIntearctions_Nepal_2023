@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r requirements}
+```{r requirements1}
 library(readxl)
 library(dplyr)
 library(ggrepel) #for geom_text_repel
@@ -510,7 +510,7 @@ rm(bm_all, forplot, forplot_SDG15, onlySDG15, maindat, sdgstat_all,
 ```
 
 # Fig. 4
-```{r requirements}
+```{r requirements2}
 library(corrplot)
 library("Hmisc")
 #note: use the Hmisc library only after the pervious chunks since using it after will lead to masking of some functions which will require adjustments in the code
@@ -598,7 +598,7 @@ rm(corrtable, corrtable_pval, corrtable_r, maindat,i, j, tonegative)
 
   
 # Fig. 5
-```{r requirements}
+```{r requirements3}
 library(ggpattern)
 ```
 
