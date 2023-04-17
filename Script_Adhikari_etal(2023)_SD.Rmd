@@ -766,7 +766,6 @@ syndat = syndat %>% mutate(Approach = fct_case_when(
 ))
 
 syndat$Interaction = factor(syndat$Interaction, levels = c("Co-benefit", "Neutral", "Trade-off"))
-saveRDS(syndat, file = "syncdata.RDS")
 
 syndat = syndat %>% 
   mutate(image = fct_case_when(
