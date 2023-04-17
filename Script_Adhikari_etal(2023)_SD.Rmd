@@ -678,7 +678,170 @@ rm(fullplot, maindat)
 ```
   
 # Fig. 6
-```{r}
+For figure 6, we use a different excel file
+```{r adding and cleaning data}
+#1. Expert Online Survey
+alldata1 = read_excel("ForSynthesisTable.xlsx", sheet = "OnlineSurvey")
+maindata1 = alldata1 %>% select(Goal, Score, n)
+colnames(maindata1) = c("SDG", "Interaction", "Count")
+maindata1 = maindata1 %>% mutate(Interaction = fct_case_when(
+  Interaction == "Positives" ~ "Co-benefit",
+  Interaction == "Negatives" ~ "Trade-off",
+  Interaction == "Neutral" ~ "Neutral"
+))
+maindata1 = maindata1 %>% group_by(Interaction)%>%
+  dplyr::summarize(n = sum(Count))
+maindata1 = maindata1 %>% mutate(Method = c(rep("SDG interaction scores")))
 
+#2. Correlation
+alldata2 = read_excel("ForSynthesisTable.xlsx", sheet = "Correlation")
+maindata2 = pivot_longer(alldata2, starts_with("SDG"), 
+                         names_to = "SDG")
+colnames(maindata2) = c("Interaction", "SDG", "Count")
+maindata2 = maindata2 %>% group_by(Interaction) %>%
+  dplyr::summarize(n = sum(Count))
+maindata2 = maindata2 %>% mutate(Interaction = fct_case_when(
+  Interaction == "Positive" ~ "Co-benefit",
+  Interaction == "Negative" ~ "Trade-off",
+  Interaction == "Neutral" ~ "Neutral"
+)) %>% mutate(Method = c(rep("Correlation analysis")))
+
+
+#3. Key Informant Interviews
+alldata3 = read_excel("ForSynthesisTable.xlsx", sheet = "KII")
+maindata3 = alldata3 %>% select(Goal,Type, Count)  
+colnames(maindata3) = c("SDG", "Interaction", "Count")
+maindata3 = maindata3 %>% group_by(Interaction) %>%
+  dplyr::summarize(n = sum(Count))
+maindata3 = maindata3 %>% mutate(Interaction = fct_case_when(
+  Interaction == "Synergies" ~ "Co-benefit",
+  Interaction == "Tradeoff" ~ "Trade-off"
+)) %>% mutate(Method = c(rep("Expert elicitation")))
 ```
 
+Combining these into one table:
+```{r combined table}
+maindata = rbind(maindata1, maindata2, maindata3)
+maindata$Method = factor(maindata$Method, levels = c("SDG interaction scores", "Correlation analysis", "Expert elicitation"))
+maindata$Interaction = factor(maindata$Interaction,
+                              levels = c("Co-benefit", "Neutral", "Trade-off"))
+
+maindata = maindata %>% group_by(Method) %>%
+ mutate(percent = round(n/sum(n),2))
+```
+
+```{r making the plot}
+comparisonplot = ggplot(data = maindata, aes(x = Method, y = percent, fill = Interaction)) + 
+  geom_bar(stat = "identity", position = "fill") +
+ geom_text(aes(x = Method, y = percent, label= paste0(percent*100, " %")),
+           position = position_fill(vjust = 0.5), colour = "black") +
+  scale_fill_manual(values = c("#588DB8", "#CFCFCF", "#9E2A2B")) +
+  scale_y_continuous(labels = function (y) y*100) +
+  
+  theme(
+    legend.text = element_text(size = 12),
+    legend.title= element_blank(),
+    legend.position = "bottom",
+    axis.text.x = element_text(size = 12),
+    axis.title = element_blank(),
+    axis.text.y = element_blank(),
+  # axis.ticks = element_line(colour = "grey70", linewidth = 0.1),
+   panel.grid.major.y = element_line(colour = "#e5e5e4", linewidth = 0.1),
+    panel.grid.minor.y = element_line(colour = "#e5e5e4", linewidth = 0.1),
+   panel.background = element_blank()
+    ) 
+
+comparisonplot
+
+#saving to file
+png(filename = "Figure6.png",
+    width = 800,
+    height = 800,
+    res = 120)
+comparisonplot
+dev.off()
+
+
+rm(alldata1, alldata2, alldata3, comparisonplot, maindata1,
+   maindata2, maindata3, maindata)
+```
+
+# Fig. 7
+```{r adding and cleaning the data}
+syndat <- read_excel("Alldata.xlsx", sheet = "allmethods")
+
+syndat$SDG = factor(syndat$SDG, levels = c("SDG 17", "SDG 16", paste("SDG", seq(13, 1, -1))))
+syndat = syndat %>% mutate(Approach = fct_case_when(
+  Approach == "Interaction Scores" ~ "SDG interaction scores",
+  Approach == "Temporal Analysis" ~ "Correlation analysis",
+  Approach == "Interview" ~ "Expert elicitation"
+))
+
+syndat$Interaction = factor(syndat$Interaction, levels = c("Co-benefit", "Neutral", "Trade-off"))
+saveRDS(syndat, file = "syncdata.RDS")
+
+syndat = syndat %>% 
+  mutate(image = fct_case_when(
+  SDG == "SDG 1" ~ "Goal-01.png",
+  SDG == "SDG 2" ~ "Goal-02.png",
+  SDG == "SDG 3" ~ "Goal-03.png",
+  SDG == "SDG 4" ~ "Goal-04.png",
+  SDG == "SDG 5" ~ "Goal-05.png",
+  SDG == "SDG 6" ~ "Goal-06.png",
+  SDG == "SDG 7" ~ "Goal-07.png",
+  SDG == "SDG 8" ~ "Goal-08.png",
+  SDG == "SDG 9" ~ "Goal-09.png",
+  SDG == "SDG 10" ~ "Goal-10.png",
+  SDG == "SDG 11" ~ "Goal-11.png",
+  SDG == "SDG 12" ~ "Goal-12.png",
+  SDG == "SDG 13" ~ "Goal-13.png",
+  SDG == "SDG 16" ~ "Goal-16.png",
+  SDG == "SDG 17" ~ "Goal-17.png"
+))
+
+```
+  Making the figure::
+```{r Fig 7 plot}
+figure = ggplot(data = syndat, aes(x = SDG, y = pc, fill = Interaction)) +
+    scale_fill_manual(values = c("#588DB8", "#CFCFCF" ,"#9E2A2B")) +
+  
+  geom_col(position = "stack") +
+  
+  geom_text(aes(label = ifelse(Interaction == "Neutral", "",  
+                  ifelse(pc > 0, paste0(pc*100, "%"), ""))),
+           position = position_fill(vjust = 0.5), colour = "black", size = 6) +
+  
+  facet_grid(cols = vars(Approach),
+             ) + 
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  #geom_image(data = syndat, aes(x = SDG, y = -0.1, image = image), size = 0.1) +
+ # coord_cartesian(ylim = c(0, 1), clip = "off") +
+
+  
+     theme(
+        legend.text = element_text(size = 20),
+        legend.title = element_text(size = 25),
+        legend.position = "bottom",
+        axis.text.x = element_text(size = 18),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank(),
+        strip.text.x = element_text(size = 20), #to increase size of facets
+        panel.spacing = unit(1, "lines")) +
+  coord_flip()
+
+figure
+
+#saving it to file::
+png(filename = "Figure7.png",
+    width = 1600,
+    height = 1700,
+    res = 120)
+
+figure
+
+dev.off()
+
+#note: the SDGs are ascending (starts with SDG 1 in the top until SDG 17 in the bottom)
+#the logo for each SDGs were added manually
+```
