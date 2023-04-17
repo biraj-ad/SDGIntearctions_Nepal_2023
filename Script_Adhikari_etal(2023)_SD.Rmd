@@ -402,18 +402,6 @@ bm_all = ggplot() +
   scale_x_continuous(trans = "log10",
                      breaks = c(0.5, 0.8, 1, 2, 3)) +
   
-  #plotting for SDG 15 AR and IC
- #geom_point(data = for_plot, aes(x = ar, y = ic/350), 
-  #          size = 3, shape = 17, color = c("#4393c3", "#d6604d")) + 
- #geom_text_repel(data = for_plot, aes(x = ar, y = ic/350), label = c(rep("SDG 15", 2)), 
-  #                color = c("#4393c3", "#d6604d"), size = 2
-   #               ) +
-  
-#  scale_x_continuous(limits = c(0,2)) +
-  
-#  scale_y_continuous(sec.axis = sec_axis(trans = ~.*350, name = "Interconnectedness (SDG 15)")) +
-  
-  #Labels for axis and sections (buffers/multipliers)
   labs(x = "Activity Ratio", y = "Interconnectedness") + 
   annotate(geom = "text", x = 0.75, y = 3, label = "Buffers", 
            fontface = 'italic', size = 3.5) +
@@ -509,7 +497,7 @@ onlySDG15 = ggplot() +
 onlySDG15
 
 #exporting this
-png(filename = "OnlySDG15_v2.png",
+png(filename = "Figure3b.png",
     width = 1000,
     height = 750,
     res = 300)
@@ -598,7 +586,7 @@ colnames(corrtable_r) = c("15.1.1b", "15.1.2a", "15.1.2b",
 #making the corrplot
 
 png(filename = "Figure4.png",
-    height = 800,
+    height = 1200,
     width = 1600,
     res = 120)
 
